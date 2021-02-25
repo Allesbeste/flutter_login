@@ -35,6 +35,7 @@ class AnimatedTextFormField extends StatefulWidget {
     this.labelText,
     this.prefixIcon,
     this.suffixIcon,
+    this.prefixText,
     this.keyboardType,
     this.textInputAction,
     this.obscureText = false,
@@ -55,6 +56,7 @@ class AnimatedTextFormField extends StatefulWidget {
   final String labelText;
   final Widget prefixIcon;
   final Widget suffixIcon;
+  final String prefixText;
   final TextInputType keyboardType;
   final TextInputAction textInputAction;
   final bool obscureText;
@@ -191,6 +193,7 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
     return InputDecoration(
       labelText: widget.labelText,
       prefixIcon: _buildInertiaAnimation(widget.prefixIcon),
+      prefixText: widget.prefixText,
       suffixIcon: _buildInertiaAnimation(widget.loadingController != null
           ? FadeTransition(
               opacity: suffixIconOpacityAnimation,

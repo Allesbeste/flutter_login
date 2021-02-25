@@ -8,22 +8,36 @@ enum AuthMode { Signup, Login }
 typedef AuthCallback = Future<String> Function(LoginData);
 
 /// The result is an error message, callback successes if message is null
+typedef SignupCallback = Future<String> Function(SignupData);
+
+/// The result is an error message, callback successes if message is null
+typedef SignupConfirmCallback = Future<String> Function(SignupConfirmData);
+
+/// The result is an error message, callback successes if message is null
 typedef RecoverCallback = Future<String> Function(String);
 
 class Auth with ChangeNotifier {
   Auth({
     this.onLogin,
     this.onSignup,
+    this.onSignupConfirm,
     this.onRecoverPassword,
+    String username = '',
     String email = '',
     String password = '',
     String confirmPassword = '',
-  })  : this._email = email,
+    String mobile = '',
+    String confirmationString = '',
+  })  : this._username = username,
         this._password = password,
-        this._confirmPassword = confirmPassword;
+        this._confirmPassword = confirmPassword,
+        this._email = email,
+        this._mobile = mobile,
+        this._confirmationString = confirmationString;
 
   final AuthCallback onLogin;
-  final AuthCallback onSignup;
+  final SignupCallback onSignup;
+  final SignupConfirmCallback onSignupConfirm;
   final RecoverCallback onRecoverPassword;
 
   AuthMode _mode = AuthMode.Login;
@@ -36,6 +50,7 @@ class Auth with ChangeNotifier {
 
   bool get isLogin => _mode == AuthMode.Login;
   bool get isSignup => _mode == AuthMode.Signup;
+  bool isSignupConfirm = false;
   bool isRecover = false;
 
   AuthMode opposite() {
@@ -51,10 +66,10 @@ class Auth with ChangeNotifier {
     return mode;
   }
 
-  String _email = '';
-  get email => _email;
-  set email(String email) {
-    _email = email;
+  String _username = '';
+  get username => _username;
+  set username(String username) {
+    _username = username;
     notifyListeners();
   }
 
@@ -69,6 +84,27 @@ class Auth with ChangeNotifier {
   get confirmPassword => _confirmPassword;
   set confirmPassword(String confirmPassword) {
     _confirmPassword = confirmPassword;
+    notifyListeners();
+  }
+
+  String _email = '';
+  get email => _email;
+  set email(String email) {
+    _email = email;
+    notifyListeners();
+  }
+
+  String _mobile = '';
+  get mobile => _mobile;
+  set mobile(String mobile) {
+    _mobile = mobile;
+    notifyListeners();
+  }
+
+  String _confirmationString = '';
+  get confirmationString => _confirmationString;
+  set confirmationString(String confirmationString) {
+    _confirmationString = confirmationString;
     notifyListeners();
   }
 }

@@ -206,6 +206,7 @@ class FlutterLogin extends StatefulWidget {
   FlutterLogin({
     Key key,
     @required this.onSignup,
+    @required this.onSignupConfirm,
     @required this.onLogin,
     @required this.onRecoverPassword,
     this.title = 'LOGIN',
@@ -214,6 +215,7 @@ class FlutterLogin extends StatefulWidget {
     this.theme,
     this.emailValidator,
     this.passwordValidator,
+    this.mobileValidator,
     this.onSubmitAnimationCompleted,
     this.logoTag,
     this.titleTag,
@@ -221,7 +223,10 @@ class FlutterLogin extends StatefulWidget {
   }) : super(key: key);
 
   /// Called when the user hit the submit button when in sign up mode
-  final AuthCallback onSignup;
+  final SignupCallback onSignup;
+
+  /// Called when the user hit the submit button when in sign up confirmation mode
+  final SignupConfirmCallback onSignupConfirm;
 
   /// Called when the user hit the submit button when in login mode
   final AuthCallback onLogin;
@@ -251,6 +256,9 @@ class FlutterLogin extends StatefulWidget {
   /// Same as [emailValidator] but for password
   final FormFieldValidator<String> passwordValidator;
 
+  /// Same as [emailValidator] but for mobile
+  final FormFieldValidator<String> mobileValidator;
+
   /// Called after the submit animation's completed. Put your route transition
   /// logic here. Recommend to use with [logoTag] and [titleTag]
   final Function onSubmitAnimationCompleted;
@@ -279,6 +287,13 @@ class FlutterLogin extends StatefulWidget {
   static final FormFieldValidator<String> defaultPasswordValidator = (value) {
     if (value.isEmpty || value.length <= 2) {
       return 'Password is too short!';
+    }
+    return null;
+  };
+
+  static final FormFieldValidator<String> defaultMobileValidator = (value) {
+    if (value.isEmpty || !Regex.mobile.hasMatch(value)) {
+      return 'Mobile number format invalid!';
     }
     return null;
   };
@@ -540,6 +555,8 @@ class _FlutterLoginState extends State<FlutterLogin>
         widget.emailValidator ?? FlutterLogin.defaultEmailValidator;
     final passwordValidator =
         widget.passwordValidator ?? FlutterLogin.defaultPasswordValidator;
+    final mobileValidator =
+        widget.mobileValidator ?? FlutterLogin.defaultMobileValidator;
 
     return MultiProvider(
       providers: [
@@ -550,6 +567,7 @@ class _FlutterLoginState extends State<FlutterLogin>
           create: (context) => Auth(
             onLogin: widget.onLogin,
             onSignup: widget.onSignup,
+            onSignupConfirm: widget.onSignupConfirm,
             onRecoverPassword: widget.onRecoverPassword,
           ),
         ),
