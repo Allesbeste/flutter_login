@@ -16,6 +16,8 @@ typedef SignupConfirmCallback = Future<String> Function(SignupConfirmData);
 /// The result is an error message, callback successes if message is null
 typedef RecoverCallback = Future<String> Function(String);
 
+typedef ResendOTPCallback = Future<bool> Function(String username);
+
 class Auth with ChangeNotifier {
   Auth({
     this.onLogin,
@@ -26,11 +28,15 @@ class Auth with ChangeNotifier {
     String email = '',
     String password = '',
     String confirmPassword = '',
+    String firstName = '',
+    String lastName = '',
     String mobile = '',
     String confirmationString = '',
   })  : this._username = username,
         this._password = password,
         this._confirmPassword = confirmPassword,
+        this._firstName = firstName,
+        this._lastName = lastName,
         this._email = email,
         this._mobile = mobile,
         this._confirmationString = confirmationString;
@@ -84,6 +90,20 @@ class Auth with ChangeNotifier {
   get confirmPassword => _confirmPassword;
   set confirmPassword(String confirmPassword) {
     _confirmPassword = confirmPassword;
+    notifyListeners();
+  }
+
+  String _firstName = '';
+  get firstName => _firstName;
+  set firstName(String firstName) {
+    _firstName = firstName;
+    notifyListeners();
+  }
+
+  String _lastName = '';
+  get lastName => _lastName;
+  set lastName(String lastName) {
+    _lastName = lastName;
     notifyListeners();
   }
 

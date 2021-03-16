@@ -209,12 +209,16 @@ class FlutterLogin extends StatefulWidget {
     @required this.onSignupConfirm,
     @required this.onLogin,
     @required this.onRecoverPassword,
+    @required this.onRequestOTPResend,
     this.title = 'LOGIN',
     this.logo,
     this.messages,
     this.theme,
+    this.usernameValidator,
     this.emailValidator,
     this.passwordValidator,
+    this.firstNameValidator,
+    this.lastNameValidator,
     this.mobileValidator,
     this.onSubmitAnimationCompleted,
     this.logoTag,
@@ -234,6 +238,9 @@ class FlutterLogin extends StatefulWidget {
   /// Called when the user hit the submit button when in recover password mode
   final RecoverCallback onRecoverPassword;
 
+  /// Called when a request is made to resend the confirmation OTP
+  final ResendOTPCallback onRequestOTPResend;
+
   /// The large text above the login [Card], usually the app or company name
   final String title;
 
@@ -249,14 +256,28 @@ class FlutterLogin extends StatefulWidget {
   /// widget
   final LoginTheme theme;
 
+  /// Username validating logic, Returns an error string to display if the input is
+  /// invalid, or null otherwise
+  final FormFieldValidator<String> usernameValidator;
+
   /// Email validating logic, Returns an error string to display if the input is
   /// invalid, or null otherwise
   final FormFieldValidator<String> emailValidator;
 
-  /// Same as [emailValidator] but for password
+  /// Password validating logic, Returns an error string to display if the input is
+  /// invalid, or null otherwise
   final FormFieldValidator<String> passwordValidator;
 
-  /// Same as [emailValidator] but for mobile
+  /// First name validating logic, Returns an error string to display if the input is
+  /// invalid, or null otherwise
+  final FormFieldValidator<String> firstNameValidator;
+
+  /// Last name validating logic, Returns an error string to display if the input is
+  /// invalid, or null otherwise
+  final FormFieldValidator<String> lastNameValidator;
+
+  /// Mobile number validating logic, Returns an error string to display if the input is
+  /// invalid, or null otherwise
   final FormFieldValidator<String> mobileValidator;
 
   /// Called after the submit animation's completed. Put your route transition
@@ -277,6 +298,13 @@ class FlutterLogin extends StatefulWidget {
   /// passed in
   final bool showDebugButtons;
 
+  static final FormFieldValidator<String> defaultUsernameValidator = (value) {
+    if (value.isEmpty || value.length < 1) {
+      return 'Invalid username!';
+    }
+    return null;
+  };
+
   static final FormFieldValidator<String> defaultEmailValidator = (value) {
     if (value.isEmpty || !Regex.email.hasMatch(value)) {
       return 'Invalid email!';
@@ -287,6 +315,20 @@ class FlutterLogin extends StatefulWidget {
   static final FormFieldValidator<String> defaultPasswordValidator = (value) {
     if (value.isEmpty || value.length <= 2) {
       return 'Password is too short!';
+    }
+    return null;
+  };
+
+  static final FormFieldValidator<String> defaultFirstNameValidator = (value) {
+    if (value.isEmpty || value.length < 1) {
+      return 'Invalid first name!';
+    }
+    return null;
+  };
+
+  static final FormFieldValidator<String> defaultLastNameValidator = (value) {
+    if (value.isEmpty || value.length < 1) {
+      return 'Invalid last name!';
     }
     return null;
   };
@@ -551,10 +593,16 @@ class _FlutterLoginState extends State<FlutterLogin>
     const cardInitialHeight = 300;
     final cardTopPosition = deviceSize.height / 2 - cardInitialHeight / 2;
     final headerHeight = cardTopPosition - headerMargin;
+    final usernameValidator =
+        widget.usernameValidator ?? FlutterLogin.defaultUsernameValidator;
     final emailValidator =
         widget.emailValidator ?? FlutterLogin.defaultEmailValidator;
     final passwordValidator =
         widget.passwordValidator ?? FlutterLogin.defaultPasswordValidator;
+    final firstNameValidator =
+        widget.firstNameValidator ?? FlutterLogin.defaultFirstNameValidator;
+    final lastNameValidator =
+        widget.lastNameValidator ?? FlutterLogin.defaultLastNameValidator;
     final mobileValidator =
         widget.mobileValidator ?? FlutterLogin.defaultMobileValidator;
 
@@ -595,10 +643,15 @@ class _FlutterLoginState extends State<FlutterLogin>
                         key: authCardKey,
                         padding: EdgeInsets.only(top: cardTopPosition),
                         loadingController: _loadingController,
+                        usernameValidator: usernameValidator,
                         emailValidator: emailValidator,
                         passwordValidator: passwordValidator,
+                        firstNameValidator: firstNameValidator,
+                        lastNameValidator: lastNameValidator,
+                        mobileValidator: mobileValidator,
                         onSubmit: _reverseHeaderAnimation,
                         onSubmitCompleted: widget.onSubmitAnimationCompleted,
+                        onRequestOTPResend: widget.onRequestOTPResend,
                       ),
                     ),
                     Positioned(

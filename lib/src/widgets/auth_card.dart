@@ -24,20 +24,28 @@ class AuthCard extends StatefulWidget {
     Key key,
     this.padding = const EdgeInsets.all(0),
     this.loadingController,
+    this.usernameValidator,
     this.emailValidator,
     this.passwordValidator,
+    this.firstNameValidator,
+    this.lastNameValidator,
     this.mobileValidator,
     this.onSubmit,
     this.onSubmitCompleted,
+    this.onRequestOTPResend,
   }) : super(key: key);
 
   final EdgeInsets padding;
   final AnimationController loadingController;
+  final FormFieldValidator<String> usernameValidator;
   final FormFieldValidator<String> emailValidator;
   final FormFieldValidator<String> passwordValidator;
+  final FormFieldValidator<String> firstNameValidator;
+  final FormFieldValidator<String> lastNameValidator;
   final FormFieldValidator<String> mobileValidator;
   final Function onSubmit;
   final Function onSubmitCompleted;
+  final ResendOTPCallback onRequestOTPResend;
 
   @override
   AuthCardState createState() => AuthCardState();
@@ -150,11 +158,14 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
     }
   }
 
-  void _switchSignupConfirm(bool confirm) {
+  void _switchSignupConfirm(bool confirm, bool resendOTP) {
     final auth = Provider.of<Auth>(context, listen: false);
 
     auth.isSignupConfirm = confirm;
     if (confirm) {
+      if (resendOTP) {
+        widget.onRequestOTPResend(auth.username);
+      }
       _fromPageIndex = _pageIndex;
       _pageController.animateToPage(
         2,
@@ -319,12 +330,13 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
             case 2: {
               if (_pageIndex == 2 || _fromPageIndex == 2) {
                 child = _ConfirmCard(
-                  onSwitchSignup: () => _switchSignupConfirm(false),
+                  onSwitchSignup: () => _switchSignupConfirm(false, false),
                   onSignupSuccess: () {
                     final auth = Provider.of<Auth>(context, listen: false);
                     auth.mode = AuthMode.Login;
-                    _switchSignupConfirm(false);
-                  }
+                    _switchSignupConfirm(false, false);
+                  },
+                  onRequestOTPResend: widget.onRequestOTPResend,
                 );
               }
             }
@@ -339,11 +351,14 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
                       loadingController: _isLoadingFirstTime
                           ? _formLoadingController
                           : (_formLoadingController..value = 1.0),
+                      usernameValidator: widget.usernameValidator,
                       emailValidator: widget.emailValidator,
                       passwordValidator: widget.passwordValidator,
+                      firstNameValidator: widget.firstNameValidator,
+                      lastNameValidator: widget.lastNameValidator,
                       mobileValidator: widget.mobileValidator,
                       onSwitchRecoveryPassword: () => _switchRecovery(true),
-                      onConfirmSignup: () => _switchSignupConfirm(true),
+                      onConfirmSignup: (confirm, resend) => _switchSignupConfirm(confirm, resend),
                       onSubmitCompleted: () {
                         _forwardChangeRouteAnimation().then((_) {
                           widget?.onSubmitCompleted();
@@ -407,8 +422,11 @@ class _LoginCard extends StatefulWidget {
   _LoginCard({
     Key key,
     this.loadingController,
+    @required this.usernameValidator,
     @required this.emailValidator,
     @required this.passwordValidator,
+    @required this.firstNameValidator,
+    @required this.lastNameValidator,
     @required this.mobileValidator,
     @required this.onSwitchRecoveryPassword,
     @required this.onConfirmSignup,
@@ -417,8 +435,11 @@ class _LoginCard extends StatefulWidget {
   }) : super(key: key);
 
   final AnimationController loadingController;
+  final FormFieldValidator<String> usernameValidator;
   final FormFieldValidator<String> emailValidator;
   final FormFieldValidator<String> passwordValidator;
+  final FormFieldValidator<String> firstNameValidator;
+  final FormFieldValidator<String> lastNameValidator;
   final FormFieldValidator<String> mobileValidator;
   final Function onSwitchRecoveryPassword;
   final Function onSwitchAuth;
@@ -434,6 +455,8 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
 
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
+  final _firstnameFocusNode = FocusNode();
+  final _lastnameFocusNode = FocusNode();
   final _emailFocusNode = FocusNode();
   final _mobileFocusNode = FocusNode();
   final _confirmationFocusNode = FocusNode();
@@ -441,6 +464,8 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   TextEditingController _nameController;
   TextEditingController _passController;
   TextEditingController _confirmPassController;
+  TextEditingController _firstnameController;
+  TextEditingController _lastnameController;
   TextEditingController _emailController;
   TextEditingController _mobileController;
   TextEditingController _confirmationController;
@@ -471,6 +496,8 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     _nameController = TextEditingController(text: auth.username);
     _passController = TextEditingController(text: auth.password);
     _confirmPassController = TextEditingController(text: auth.confirmPassword);
+    _firstnameController = TextEditingController(text: auth.firstName);
+    _lastnameController = TextEditingController(text: auth.lastName);
     _emailController = TextEditingController(text: auth.email);
     _mobileController = TextEditingController(text: auth.mobile);
 
@@ -573,6 +600,8 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       error = await auth.onSignup(SignupData(
         name: auth.username,
         password: auth.password,
+        firstName: auth.firstName,
+        lastName: auth.lastName,
         email: auth.email,
         mobile: auth.mobile,
       ));
@@ -595,7 +624,10 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     if (!DartHelper.isNullOrEmpty(error)) {
       if (error == 'CONFIRM') {
         // auth.mode = AuthMode.SignupConfirm;
-        widget.onConfirmSignup();
+        widget.onConfirmSignup(true, false);
+        return true;
+      } else if (error == "RECONFIRM") {
+        widget.onConfirmSignup(true, true);
         return true;
       }
       final messages = Provider.of<LoginMessages>(context, listen: false);
@@ -625,7 +657,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       onFieldSubmitted: (value) {
         FocusScope.of(context).requestFocus(_passwordFocusNode);
       },
-      // validator: widget.emailValidator,
+      validator: widget.usernameValidator,
       onSaved: (value) => auth.username = value,
     );
   }
@@ -666,7 +698,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       focusNode: _confirmPasswordFocusNode,
       // onFieldSubmitted: (value) => _submit(),
       onFieldSubmitted: (value) {
-        FocusScope.of(context).requestFocus(_emailFocusNode);
+        FocusScope.of(context).requestFocus(_firstnameFocusNode);
       },
       validator: auth.isSignup
           ? (value) {
@@ -677,6 +709,54 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
             }
           : (value) => null,
       onSaved: (value) => auth.confirmPassword = value,
+    );
+  }
+
+  Widget _buildFirstnameField(double width, LoginMessages messages, Auth auth) {
+    return AnimatedTextFormField(
+      controller: _firstnameController,
+      width: width,
+      enabled: auth.isSignup,
+      loadingController: _loadingController,
+      inertiaController: _postSwitchAuthController,
+      inertiaDirection: TextFieldInertiaDirection.right,
+      // interval: _nameTextFieldLoadingAnimationInterval,
+      labelText: messages.firstnameHint,
+      prefixIcon: Icon(FontAwesomeIcons.solidUserCircle),
+      keyboardType: TextInputType.name,
+      textInputAction: TextInputAction.next,
+      focusNode: _firstnameFocusNode,
+      onFieldSubmitted: (value) {
+        FocusScope.of(context).requestFocus(_lastnameFocusNode);
+      },
+      validator: auth.isSignup
+          ? widget.firstNameValidator
+          : null,
+      onSaved: (value) => auth.firstName = value,
+    );
+  }
+
+  Widget _buildLastnameField(double width, LoginMessages messages, Auth auth) {
+    return AnimatedTextFormField(
+      controller: _lastnameController,
+      width: width,
+      enabled: auth.isSignup,
+      loadingController: _loadingController,
+      inertiaController: _postSwitchAuthController,
+      inertiaDirection: TextFieldInertiaDirection.right,
+      // interval: _nameTextFieldLoadingAnimationInterval,
+      labelText: messages.lastnameHint,
+      prefixIcon: Icon(FontAwesomeIcons.solidUserCircle),
+      keyboardType: TextInputType.name,
+      textInputAction: TextInputAction.next,
+      focusNode: _lastnameFocusNode,
+      onFieldSubmitted: (value) {
+        FocusScope.of(context).requestFocus(_emailFocusNode);
+      },
+      validator: auth.isSignup
+          ? widget.lastNameValidator
+          : null,
+      onSaved: (value) => auth.lastName = value,
     );
   }
 
@@ -868,6 +948,10 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
             child: Column(
               children: [
                 _buildConfirmPasswordField(textFieldWidth, messages, auth),
+                SizedBox(height: 20),
+                _buildFirstnameField(textFieldWidth, messages, auth),
+                SizedBox(height: 20),
+                _buildLastnameField(textFieldWidth, messages, auth),
                 SizedBox(height: 20),
                 _buildEmailField(textFieldWidth, messages, auth),
                 SizedBox(height: 20),
@@ -1061,10 +1145,12 @@ class _ConfirmCard extends StatefulWidget {
     Key key,
     @required this.onSwitchSignup,
     @required this.onSignupSuccess,
+    this.onRequestOTPResend,
   }) : super(key: key);
 
   final Function onSwitchSignup;
   final Function onSignupSuccess;
+  final ResendOTPCallback onRequestOTPResend;
 
   @override
   _ConfirmCardState createState() => _ConfirmCardState();
@@ -1152,7 +1238,7 @@ class _ConfirmCardState extends State<_ConfirmCard>
 
   Widget _buildBackButton(ThemeData theme, LoginMessages messages) {
     return FlatButton(
-      child: Text(messages.confirmSignupRetryButton),
+      child: Text(messages.confirmSignupBackButton),
       onPressed: !_isSubmitting ? () {
         // _formSignupKey.currentState.save();
         widget.onSwitchSignup();

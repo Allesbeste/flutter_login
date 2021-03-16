@@ -4,7 +4,9 @@ class LoginMessages with ChangeNotifier {
   LoginMessages({
     this.usernameHint: defaultUsernameHint,
     this.passwordHint: defaultPasswordHint,
-    this.confirmPasswordHint: defaultConfirmPasswordHint,    
+    this.confirmPasswordHint: defaultConfirmPasswordHint,   
+    this.firstnameHint: defaultFirstnameHint,
+    this.lastnameHint: defaultLastnameHint, 
     this.forgotPasswordButton: defaultForgotPasswordButton,
     this.emailHint: defaultEmailHint,
     this.mobileHint: defaultMobileHint,
@@ -14,7 +16,7 @@ class LoginMessages with ChangeNotifier {
     this.confirmSignupButton: defaultConfirmSignupButton,
     this.confirmSignupIntro: defaultConfirmSignupIntro,
     this.confirmSignupDescription: defaultConfirmSignupDescription,
-    this.confirmSignupRetryButton: defaultConfirmSignupRetryButton,
+    this.confirmSignupBackButton: defaultConfirmSignupBackButton,
     this.signupSuccess: defaultSignupSuccess,
     this.recoverPasswordButton: defaultRecoverPasswordButton,
     this.recoverPasswordIntro: defaultRecoverPasswordIntro,
@@ -29,6 +31,8 @@ class LoginMessages with ChangeNotifier {
   static const defaultUsernameHint = 'Username';
   static const defaultPasswordHint = 'Password';
   static const defaultConfirmPasswordHint = 'Confirm Password';
+  static const defaultFirstnameHint = 'First Name';
+  static const defaultLastnameHint = 'Last Name';
   static const defaultForgotPasswordButton = 'Forgot Password?';
   static const defaultEmailHint = 'Email';
   static const defaultMobileHint = 'Mobile';
@@ -39,7 +43,7 @@ class LoginMessages with ChangeNotifier {
   static const defaultConfirmSignupIntro = 'Enter your verification code here';
   static const defaultConfirmSignupDescription =
       'You will receive a verification code via SMS within a minute or two on the contact number provided during signup.';
-  static const defaultConfirmSignupRetryButton = 'RETRY';
+  static const defaultConfirmSignupBackButton = 'BACK';
   static const defaultSignupSuccess = 'You can now login.';
   static const defaultRecoverPasswordButton = 'RECOVER';
   static const defaultRecoverPasswordIntro = 'Reset your password here';
@@ -59,6 +63,12 @@ class LoginMessages with ChangeNotifier {
 
   /// Hint text of the confirm password [TextField]
   final String confirmPasswordHint;
+
+  /// Hint text of the first name [TextField]
+  final String firstnameHint;
+
+  /// Hint text of the last name [TextField]
+  final String lastnameHint;
 
   /// Hint text of the email [TextField]
   final String emailHint;
@@ -89,7 +99,7 @@ class LoginMessages with ChangeNotifier {
 
   /// Signup confirmation retry button's label. Retry button is used to go back to to
   /// signup form from the signup confirmation form
-  final String confirmSignupRetryButton;
+  final String confirmSignupBackButton;
 
   /// The success message to show after signing up
   final String signupSuccess;

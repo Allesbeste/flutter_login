@@ -28,29 +28,33 @@ class LoginData {
 class SignupData {
   final String name;
   final String password;
+  final String firstName;
+  final String lastName;
   final String email;
   final String mobile;
 
   SignupData({
     @required this.name,
     @required this.password,
+    @required this.firstName,
+    @required this.lastName,
     @required this.email,
     @required this.mobile,
   });
 
   @override
   String toString() {
-    return '$runtimeType($name, $password, $email, $mobile)';
+    return '$runtimeType($name, $password, $firstName, $lastName, $email, $mobile)';
   }
 
   bool operator ==(Object other) {
     if (other is SignupData) {
-      return name == other.name && password == other.password && email == other.email && mobile == other.mobile;
+      return name == other.name && password == other.password && firstName == other.firstName && lastName == other.lastName && email == other.email && mobile == other.mobile;
     }
     return false;
   }
 
-  int get hashCode => hash4(name, password, email, mobile);
+  int get hashCode => hash2(hash4(name, password, firstName, lastName), hash2(email, mobile));
 }
 
 class SignupConfirmData {
